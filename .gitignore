@@ -1,0 +1,13 @@
+.env
+__pycache__/
+*.pyc
+*.pyo
+
+# Frontend build artifacts
+frontend/youtube_chat/node_modules/
+frontend/youtube_chat/.next/
+frontend/youtube_chat/.turbo/
+
+# Local env/config
+frontend/youtube_chat/.env*
+.DS_Store
