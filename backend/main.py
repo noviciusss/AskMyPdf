@@ -1,14 +1,25 @@
+import os
+
 from fastapi import FastAPI
-from pydantic import BaseModel
-from rag import ask_question, prepare_video_context
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+
+from .rag import ask_question, prepare_video_context
 
 app = FastAPI()
 
+raw_origins = os.getenv("ALLOWED_ORIGINS", "*")
+if raw_origins.strip() == "*":
+    cors_origins = ["*"]
+    cors_allow_credentials = False
+else:
+    cors_origins = [origin.strip() for origin in raw_origins.split(",") if origin.strip()]
+    cors_allow_credentials = True
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
+    allow_origins=cors_origins,
+    allow_credentials=cors_allow_credentials,
     allow_methods=["*"],
     allow_headers=["*"],
 )
