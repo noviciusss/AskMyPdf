@@ -3,9 +3,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-import yt_dlp
-import json
-import requests
+from youtube_transcript_api import YouTubeTranscriptApi, TranscriptsDisabled
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_community.vectorstores import FAISS
@@ -25,64 +23,18 @@ def extract_video_id(youtube_url: str) -> str:
     else:
         raise ValueError("Invalid YouTube URL")
 
-def get_transcript(youtube_url: str) -> str:
-    """Get the transcript of YouTube video from url using yt-dlp."""
+def get_transcript(youtube_url:str)->str:
+    """Get the transcript of youTube video from url."""
     video_id = extract_video_id(youtube_url)
-    
-    ydl_opts = {
-        'skip_download': True,
-        'writesubtitles': True,
-        'writeautomaticsub': True,
-        'subtitleslangs': ['en'],
-        'quiet': True,
-        'no_warnings': True,
-    }
-    
     try:
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            # 1. Extract Info
-            info = ydl.extract_info(youtube_url, download=False)
-            
-            # 2. Find Subtitles
-            subtitles = info.get('subtitles') or info.get('automatic_captions')
-            if not subtitles or 'en' not in subtitles:
-                raise ValueError("No English transcript available for this video.")
-            
-            # 3. Get URL for JSON3 or VTT format
-            subs = subtitles['en']
-            # Prefer json3 for easier parsing, fallback to vtt
-            selected_sub = next((s for s in subs if s['ext'] == 'json3'), None) or \
-                           next((s for s in subs if s['ext'] == 'vtt'), subs[0])
-            
-            sub_url = selected_sub['url']
-            
-            # 4. Download Transcript Content
-            resp = requests.get(sub_url)
-            resp.raise_for_status()
-            
-            # 5. Parse Transcript
-            if selected_sub['ext'] == 'json3':
-                data = resp.json()
-                # JSON3 format: events -> segs -> utf8
-                text_parts = []
-                for event in data.get('events', []):
-                    if 'segs' in event:
-                        for seg in event['segs']:
-                            if 'utf8' in seg:
-                                text_parts.append(seg['utf8'])
-                transcript = " ".join(text_parts)
-            else:
-                # Simple VTT cleanup
-                lines = resp.text.split('\n')
-                text_parts = []
-                for line in lines:
-                    if '-->' in line or line.strip() == '' or line.strip().isdigit() or line.startswith('WEBVTT'):
-                        continue
-                    text_parts.append(line.strip())
-                transcript = " ".join(text_parts)
-                
-            return transcript
-
+        transcipt_list = YouTubeTranscriptApi().fetch(video_id)
+    
+        transcipt = " ".join(snippet.text for snippet in transcipt_list)
+        return transcipt
+    
+    except TranscriptsDisabled as exc:
+        logger.warning("No transcript available for this video.")
+        raise ValueError("Transcript is not available for this video.") from exc
     except Exception as exc:
         logger.exception("Failed to fetch transcript for %s", youtube_url)
         raise RuntimeError("Unable to fetch transcript.") from exc
