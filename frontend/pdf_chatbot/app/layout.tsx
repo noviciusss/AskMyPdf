@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "AskMyVideo",
-  description: "YouTube RAG assistant powered by LangChain + Gemini",
+  title: "AskMyPdf",
+  description: "Pdf RAG assistant powered by LangChain + Gemini",
   icons: {
     icon: "/logo.png",
   },
