@@ -36,6 +36,14 @@ frontend/pdf_chatbot/
   globals.css      # Styling
 ```
 
+## Screenshots
+
+![AskMyPdf frontend](Screenshot%202025-12-02%20122830.png)
+*Document upload + chat interface running locally.*
+
+![FastAPI endpoints](Screenshot%202025-12-02%20123252.png)
+*Backend OpenAPI docs showing the `/upload` and `/chat` endpoints.*
+
 ## How it works
 
 ```mermaid
